@@ -26,7 +26,7 @@ type Profile struct {
 	IsMultiUser           bool     `json:"is_multi_user,omitempty"`
 	IsMandatory           bool     `json:"is_mandatory,omitempty"`
 	AwaitDeviceConfigured bool     `json:"await_device_configured,omitempty"`
-	IsMDMRemovable        bool     `json:"await_device_configured"`
+	IsMDMRemovable        bool     `json:"is_mdm_removable"`
 	SupportPhoneNumber    string   `json:"support_phone_number,omitempty"`
 	SupportEmailAddress   string   `json:"support_email_address,omitempty"`
 	OrgMagic              string   `json:"org_magic"`
