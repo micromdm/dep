@@ -15,9 +15,9 @@ import (
 
 const (
 	libraryVersion = "0.0.1"
-	defaultBaseURL = "https://mdmenrollment.apple.com/"
+	defaultBaseURL = "https://mdmenrollment.apple.com"
 	userAgent      = "micromdm/" + libraryVersion
-	mediaType      = "application/json"
+	mediaType      = "application/json;charset=UTF8"
 )
 
 // Client interacts with DEP
@@ -36,6 +36,7 @@ type Config struct {
 
 	AuthSessionToken string //requested from DEP using above credentials
 	sessionExpires   time.Time
+	url              *url.URL
 }
 
 func (c *Config) session() error {
@@ -70,9 +71,16 @@ func (c *Config) newSession() error {
 	}
 	form := url.Values{}
 
+	// session url, relative to basepath
+	rel, err := url.Parse("/session")
+	if err != nil {
+		return err
+	}
+	sessionURL := c.url.ResolveReference(rel)
+
 	oauthClient := oauth.Client{
 		SignatureMethod: oauth.HMACSHA1,
-		TokenRequestURI: defaultBaseURL + "session",
+		TokenRequestURI: sessionURL.String(),
 		Credentials:     consumerCredentials,
 	}
 
@@ -86,6 +94,11 @@ func (c *Config) newSession() error {
 	if err := oauthClient.SetAuthorizationHeader(req.Header, accessCredentials, "GET", req.URL, form); err != nil {
 		return err
 	}
+	// add headers
+	req.Header.Add("User-Agent", userAgent)
+	req.Header.Add("Content-Type", mediaType)
+	req.Header.Add("Accept", mediaType)
+	req.Header.Add("X-Server-Protocol-Version", "2")
 
 	// get Authorization Header
 	resp, err := http.DefaultClient.Do(req)
@@ -93,6 +106,11 @@ func (c *Config) newSession() error {
 		return err
 	}
 	defer resp.Body.Close()
+
+	// check resp statuscode
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("Error establishing DEP session: %v", resp.Status)
+	}
 
 	// decode token from response
 	if err = json.NewDecoder(resp.Body).Decode(&authSessionToken); err != nil {
@@ -122,13 +140,31 @@ type depClient struct {
 }
 
 // NewClient creates a new HTTP client for communicating with DEP
-func NewClient(config *Config) Client {
-	baseURL, _ := url.Parse(defaultBaseURL)
-	c := &depClient{client: http.DefaultClient, BaseURL: baseURL, UserAgent: userAgent, Config: config}
+func NewClient(config *Config, options ...func(*Config) error) (Client, error) {
+	for _, option := range options {
+		if err := option(config); err != nil {
+			return nil, err
+		}
+	}
+
+	if config.url == nil {
+		config.url, _ = url.Parse(defaultBaseURL)
+	}
+	c := &depClient{client: http.DefaultClient, BaseURL: config.url, UserAgent: userAgent, Config: config}
 	c.accountService = accountService{client: c}
 	c.deviceService = deviceService{client: c}
 	c.profileService = profileService{client: c}
-	return c
+	return c, nil
+}
+
+// ServerURL allows the user to provide a URL for DEP server other than the default
+// useful for testing with depsim
+func ServerURL(baseURL string) func(*Config) error {
+	return func(c *Config) error {
+		var err error
+		c.url, err = url.Parse(baseURL)
+		return err
+	}
 }
 
 // NewRequest creates a DEP request

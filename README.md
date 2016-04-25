@@ -13,7 +13,10 @@ Configure and create an http client passing the Oauth credentials from the serve
         AccessToken:    "AT_O8473841",
         AccessSecret:   "AS_9d141598",
     }
-    client := dep.NewClient(config)
+    client, err := dep.NewClient(config)
+    if err != nil {
+        // handle err
+    }
 ```
 
 Use the new DEP client:
@@ -23,3 +26,5 @@ Use the new DEP client:
         // handle err
     }
 ```
+
+
