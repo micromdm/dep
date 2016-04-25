@@ -27,4 +27,6 @@ Use the new DEP client:
     }
 ```
 
+# Example
 
+In the examples folder, there's an example that you can try running against the `depsim` binary.
