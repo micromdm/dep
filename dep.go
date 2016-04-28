@@ -4,9 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 
@@ -37,6 +39,7 @@ type Config struct {
 	AuthSessionToken string //requested from DEP using above credentials
 	sessionExpires   time.Time
 	url              *url.URL
+	debug            bool
 }
 
 func (c *Config) session() error {
@@ -113,7 +116,8 @@ func (c *Config) newSession() error {
 	}
 
 	// decode token from response
-	if err = json.NewDecoder(resp.Body).Decode(&authSessionToken); err != nil {
+	// if err = json.NewDecoder(resp.Body).Decode(&authSessionToken); err != nil {
+	if err = decodeJSON(c.debug, resp.Body, &authSessionToken); err != nil {
 		return err
 	}
 
@@ -164,6 +168,14 @@ func ServerURL(baseURL string) func(*Config) error {
 		var err error
 		c.url, err = url.Parse(baseURL)
 		return err
+	}
+}
+
+// Debug will preint responses from DEP to stdout.
+func Debug() func(*Config) error {
+	return func(c *Config) error {
+		c.debug = true
+		return nil
 	}
 }
 
@@ -221,9 +233,16 @@ func (c *depClient) Do(req *http.Request, into interface{}) error {
 		}
 	}()
 
-	if err := json.NewDecoder(resp.Body).Decode(into); err != nil {
-		return err
+	return decodeJSON(c.Config.debug, resp.Body, into)
+}
+
+func decodeJSON(debug bool, body io.Reader, into interface{}) error {
+	var dec *json.Decoder
+	if debug {
+		dec = json.NewDecoder(io.TeeReader(body, os.Stdout))
+	} else {
+		dec = json.NewDecoder(body)
 	}
 
-	return nil
+	return dec.Decode(into)
 }
