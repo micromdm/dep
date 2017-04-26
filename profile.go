@@ -33,7 +33,7 @@ type Profile struct {
 	AnchorCerts           []string `json:"anchor_certs,omitempty"`
 	SupervisingHostCerts  []string `json:"supervising_host_certs,omitempty"`
 	SkipSetupItems        []string `json:"skip_setup_items,omitempty"`
-	Department            string   `json:"deparment,omitempty"`
+	Department            string   `json:"department,omitempty"`
 	Devices               []string `json:"devices"`
 }
 
