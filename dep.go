@@ -122,7 +122,7 @@ func (c *Config) newSession() error {
 
 	// set token and expiration value
 	c.AuthSessionToken = authSessionToken.AuthSessionToken
-	c.sessionExpires = time.Now().Add(time.Minute * 20)
+	c.sessionExpires = time.Now().Add(time.Minute * 3)
 	return nil
 }
 
