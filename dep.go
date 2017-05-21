@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	libraryVersion = "0.0.1"
+	libraryVersion = "0.0.2"
 	defaultBaseURL = "https://mdmenrollment.apple.com"
 	userAgent      = "micromdm/" + libraryVersion
 	mediaType      = "application/json;charset=UTF8"
@@ -116,7 +116,6 @@ func (c *Config) newSession() error {
 	}
 
 	// decode token from response
-	// if err = json.NewDecoder(resp.Body).Decode(&authSessionToken); err != nil {
 	if err = decodeJSON(c.debug, resp.Body, &authSessionToken); err != nil {
 		return err
 	}
@@ -221,17 +220,12 @@ func (c *depClient) Do(req *http.Request, into interface{}) error {
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := ioutil.ReadAll(resp.Body)
 		return fmt.Errorf("DEP API Error: %v", string(body))
 	}
-
-	defer func() {
-		if rerr := resp.Body.Close(); err == nil {
-			err = rerr
-		}
-	}()
 
 	return decodeJSON(c.Config.debug, resp.Body, into)
 }

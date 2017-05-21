@@ -21,8 +21,8 @@ Use (Cursor() and Limit() as optional arguments for Fetch Devices, example:
 	fmt.Println(fetchResponse.Devices)
 */
 type DeviceService interface {
-	FetchDevices(opts ...func(*deviceRequestOpts) error) (*DeviceResponse, error)
-	SyncDevices(cursor string, opts ...func(*deviceRequestOpts) error) (*DeviceResponse, error)
+	FetchDevices(opts ...DeviceRequestOption) (*DeviceResponse, error)
+	SyncDevices(cursor string, opts ...DeviceRequestOption) (*DeviceResponse, error)
 	DeviceDetails(devices []string) (*DeviceDetailsResponse, error)
 }
 
@@ -48,13 +48,17 @@ type Device struct {
 	OpDate time.Time `json:"op_date,omitempty"`
 }
 
+// DeviceRequestOption is an optional parameter for the DeviceService API.
+// The option can be used to set Cursor or Limit options for the request.
+type DeviceRequestOption func(*deviceRequestOpts) error
+
 type deviceRequestOpts struct {
 	Cursor string `json:"cursor,omitempty"`
 	Limit  int    `json:"limit,omitempty"`
 }
 
 // Cursor is an optional argument that can be added to FetchDevices
-func Cursor(cursor string) func(*deviceRequestOpts) error {
+func Cursor(cursor string) DeviceRequestOption {
 	return func(opts *deviceRequestOpts) error {
 		opts.Cursor = cursor
 		return nil
@@ -62,7 +66,7 @@ func Cursor(cursor string) func(*deviceRequestOpts) error {
 }
 
 // Limit is an optional argument that can be passed to FetchDevices and SyncDevices
-func Limit(limit int) func(*deviceRequestOpts) error {
+func Limit(limit int) DeviceRequestOption {
 	return func(opts *deviceRequestOpts) error {
 		if limit > 1000 {
 			return fmt.Errorf("Limit must not be higher than 1000")
@@ -81,7 +85,7 @@ type DeviceResponse struct {
 }
 
 // FetchDevices returns the result of a Fetch Devices request from DEP
-func (s deviceService) FetchDevices(opts ...func(*deviceRequestOpts) error) (*DeviceResponse, error) {
+func (s deviceService) FetchDevices(opts ...DeviceRequestOption) (*DeviceResponse, error) {
 	request := &deviceRequestOpts{}
 	for _, option := range opts {
 		if err := option(request); err != nil {
@@ -101,7 +105,7 @@ func (s deviceService) FetchDevices(opts ...func(*deviceRequestOpts) error) (*De
 }
 
 // SyncDevices returns the result of a Sync Devices request from DEP
-func (s deviceService) SyncDevices(cursor string, opts ...func(*deviceRequestOpts) error) (*DeviceResponse, error) {
+func (s deviceService) SyncDevices(cursor string, opts ...DeviceRequestOption) (*DeviceResponse, error) {
 	request := &deviceRequestOpts{Cursor: cursor}
 	for _, option := range opts {
 		if err := option(request); err != nil {
