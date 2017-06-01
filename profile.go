@@ -28,6 +28,7 @@ type Profile struct {
 	AwaitDeviceConfigured bool     `json:"await_device_configured,omitempty"`
 	IsMDMRemovable        bool     `json:"is_mdm_removable"`
 	SupportPhoneNumber    string   `json:"support_phone_number,omitempty"`
+	AutoAdvanceSetup      bool     `json:"auto_advance_setup,omitempty"`
 	SupportEmailAddress   string   `json:"support_email_address,omitempty"`
 	OrgMagic              string   `json:"org_magic"`
 	AnchorCerts           []string `json:"anchor_certs,omitempty"`
