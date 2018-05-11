@@ -43,6 +43,8 @@ type Device struct {
 	ProfilePushTime    time.Time `json:"profile_push_time,omitempty"`
 	DeviceAssignedDate time.Time `json:"device_assigned_date,omitempty"`
 	DeviceAssignedBy   string    `json:"device_assigned_by,omitempty"`
+	OS                 string    `json:"os,omitempty"`
+	DeviceFamily       string    `json:"device_family,omitempty"`
 	// sync fields
 	OpType string    `json:"op_type,omitempty"`
 	OpDate time.Time `json:"op_date,omitempty"`
